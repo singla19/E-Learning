@@ -8,8 +8,10 @@ function ClassDetails() {
 
   const [assignments, setAssignments] = useState([]);
   const [studyMaterials, setStudyMaterials] = useState([]);
+  const [announcements, setAnnouncements] = useState([]);
   const [newAssignment, setNewAssignment] = useState('');
   const [newMaterial, setNewMaterial] = useState('');
+  const [newAnnouncement, setNewAnnouncement] = useState('');
   const [newDeadline, setNewDeadline] = useState('');
   const [newComment, setNewComment] = useState('');
   const [selectedAssignmentId, setSelectedAssignmentId] = useState(null);
@@ -30,6 +32,25 @@ function ClassDetails() {
       setAssignments([...assignments, newAssign]);
       setNewAssignment('');
       setNewDeadline('');
+    }
+  };
+
+  const addStudyMaterial = () => {
+    if (newMaterial) {
+      setStudyMaterials([...studyMaterials, newMaterial]);
+      setNewMaterial('');
+    }
+  };
+
+  const addAnnouncement = () => {
+    if (newAnnouncement) {
+      const newAnnounce = {
+        id: Date.now(),
+        text: newAnnouncement,
+        date: new Date().toLocaleString()
+      };
+      setAnnouncements([...announcements, newAnnounce]);
+      setNewAnnouncement('');
     }
   };
 
@@ -66,17 +87,40 @@ function ClassDetails() {
     }
   };
 
-  const addStudyMaterial = () => {
-    if (newMaterial) {
-      setStudyMaterials([...studyMaterials, newMaterial]);
-      setNewMaterial('');
-    }
-  };
-
   return (
     <div className="class-details max-w-5xl mx-auto p-6 space-y-8 bg-white rounded-lg shadow-md">
       <h2 className="text-4xl font-bold text-center text-indigo-600">{classDetails.name}</h2>
 
+      {/* Announcements Section */}
+      <div className="announcements-section bg-gray-50 p-6 rounded-lg shadow-sm">
+        <h3 className="text-2xl font-semibold mb-4 text-indigo-500">Announcements</h3>
+        <div className="flex space-x-4 mb-6">
+          <input
+            type="text"
+            className="border border-gray-300 rounded-lg px-4 py-2 w-full"
+            placeholder="New Announcement"
+            value={newAnnouncement}
+            onChange={(e) => setNewAnnouncement(e.target.value)}
+          />
+          <button 
+            className="bg-green-500 text-white px-6 py-2 rounded-lg shadow-md hover:bg-green-600 transition"
+            onClick={addAnnouncement}
+          >
+            Post
+          </button>
+        </div>
+
+        <ul className="space-y-4">
+          {announcements.map((announce) => (
+            <li key={announce.id} className="bg-white p-4 rounded-lg shadow hover:shadow-lg transition">
+              <p className="text-lg font-semibold text-gray-800">{announce.text}</p>
+              <p className="text-gray-600 text-sm">Posted on: {announce.date}</p>
+            </li>
+          ))}
+        </ul>
+      </div>
+
+      {/* Assignments Section */}
       <div className="assignments-section bg-gray-50 p-6 rounded-lg shadow-sm">
         <h3 className="text-2xl font-semibold mb-4 text-indigo-500">Assignments</h3>
         <div className="flex flex-col md:flex-row md:items-end space-y-4 md:space-y-0 md:space-x-4 mb-6">
@@ -170,6 +214,7 @@ function ClassDetails() {
         </ul>
       </div>
 
+      {/* Study Material Section */}
       <div className="study-material-section bg-gray-50 p-6 rounded-lg shadow-sm">
         <h3 className="text-2xl font-semibold mb-4 text-indigo-500">Study Materials</h3>
         <div className="flex flex-col md:flex-row md:items-end space-y-4 md:space-y-0 md:space-x-4 mb-6">
@@ -191,25 +236,7 @@ function ClassDetails() {
         <ul className="space-y-4">
           {studyMaterials.map((material, index) => (
             <li key={index} className="bg-white p-4 rounded-lg shadow hover:shadow-lg transition">
-              {material.includes('youtube.com') || material.includes('youtu.be') ? (
-                <a 
-                  href={material} 
-                  target="_blank" 
-                  rel="noopener noreferrer" 
-                  className="text-blue-500 hover:underline text-lg font-semibold"
-                >
-                  {material}
-                </a>
-              ) : (
-                <a 
-                  href={material} 
-                  target="_blank" 
-                  rel="noopener noreferrer" 
-                  className="text-blue-500 hover:underline text-lg font-semibold"
-                >
-                  {material}
-                </a>
-              )}
+              <a href={material} target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:underline">{material}</a>
             </li>
           ))}
         </ul>

@@ -1,8 +1,24 @@
-const assignments = [
-    { id: 1, title: 'Algebra Homework', dueDate: '2024-11-01' },
-    { id: 2, title: 'Probability Assignment', dueDate: '2024-11-05' },
-    { id: 3, title: 'Mathematics 101 Quiz', dueDate: '2024-11-10' },
-  ];
-  
-  export default assignments;
-  
+const assignmentsData = [
+  {
+    id: 1,
+    classId: 1,
+    title: "Math Homework 1",
+    dueDate: "2024-10-20",
+    submissions: [
+      { studentId: 1, name: "John Doe", marks: null },
+      { studentId: 2, name: "Jane Smith", marks: null },
+    ],
+  },
+  {
+    id: 2,
+    classId: 2,
+    title: "Math Homework 2",
+    dueDate: "2024-10-22",
+    submissions: [
+      { studentId: 3, name: "Michael Brown", marks: null },
+      { studentId: 4, name: "Emily Johnson", marks: null },
+    ],
+  },
+];
+
+export default assignmentsData;

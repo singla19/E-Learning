@@ -8,15 +8,15 @@ function Sidebar() {
         MENU
       </h2>
       <div className="flex flex-col space-y-2">
-        <Link to="classes" className="sidebar-item bg-gray-700 hover:bg-gray-600 text-white transition duration-300 rounded-lg p-4 cursor-pointer font-medium">
+        <Link to="classes" className="sidebar-item bg-gray-700 hover:bg-blue-700 text-white transition duration-300 rounded-lg p-4 cursor-pointer font-medium">
           Classes
         </Link>
-        <div className="sidebar-item bg-gray-700 hover:bg-gray-600 text-white transition duration-300 rounded-lg p-4 cursor-pointer font-medium">
+        <Link to="assignments" className="sidebar-item bg-gray-700 hover:bg-blue-700 text-white transition duration-300 rounded-lg p-4 cursor-pointer font-medium">
           Assignments
-        </div>
-        <div className="sidebar-item bg-gray-700 hover:bg-gray-600 text-white transition duration-300 rounded-lg p-4 cursor-pointer font-medium">
+        </Link>
+        <Link to="doubts" className="sidebar-item bg-gray-700 hover:bg-blue-700 text-white transition duration-300 rounded-lg p-4 cursor-pointer font-medium">
           Doubts
-        </div>
+        </Link>
       </div>
     </div>
   );
