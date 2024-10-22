@@ -32,7 +32,7 @@ function Classes() {
       </button>
 
       {showForm && (
-        <div className="bg-white rounded-md shadow-md p-4 mb-4">
+        <div className="bg-white rounded-md shadow-md p-4 m-1">
           <div className="mb-2">
             <label className="block text-gray-700 text-sm font-bold mb-1" htmlFor="class-name">
               Class Name
