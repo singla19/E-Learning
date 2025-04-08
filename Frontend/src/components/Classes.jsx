@@ -20,7 +20,7 @@ function Classes() {
       try {
         const res = await axios.post('http://localhost:5000/api/classes', {
           name: newClassName,
-          students: Number(newClassStudents),
+          studentsCount: Number(newClassStudents),
         });
 
         setClasses([...classes, res.data]); // Add new class to state
@@ -92,7 +92,7 @@ function Classes() {
               </div>
               <div className="ml-4">
                 <h3 className="text-lg font-bold">{cls.name}</h3>
-                <p className="text-gray-600">No. of Students: {cls.students}</p>
+                <p className="text-gray-600">No. of Students: {cls.studentsCount}</p>
               </div>
             </div>
           </Link>

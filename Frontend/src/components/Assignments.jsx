@@ -1,49 +1,57 @@
-import React, { useState } from 'react';
-import assignmentsData from '../data/assignments';
+import React, { useState, useEffect } from 'react';
+import axios from 'axios';
 
 const Assignments = () => {
-  const [assignments, setAssignments] = useState(assignmentsData);
+  const [assignments, setAssignments] = useState([]);
 
-  const handleMarksChange = (assignmentId, studentId, marks) => {
-    setAssignments(prevAssignments =>
-      prevAssignments.map(assignment => {
-        if (assignment.id === assignmentId) {
-          return {
-            ...assignment,
-            submissions: assignment.submissions.map(submission =>
-              submission.studentId === studentId
-                ? { ...submission, marks: marks }
-                : submission
-            ),
-          };
-        }
-        return assignment;
-      })
-    );
-  };
+  useEffect(() => {
+    const fetchAssignments = async () => {
+      try {
+        const res = await axios.get('http://localhost:5000/api/assignments');
+        setAssignments(res.data);
+      } catch (error) {
+        console.error('Failed to fetch assignments:', error);
+      }
+    };
+
+    fetchAssignments();
+  }, []);
 
   return (
-    <div className="p-4 bg-gray-100">
-      <h2 className="text-2xl font-bold mb-4 text-blue-600">Assignments</h2>
-      {assignments.map(assignment => (
-        <div key={assignment.id} className="bg-white shadow-md rounded-lg p-4 mb-4 border border-gray-300">
+    <div className="p-4 bg-gray-100 min-h-screen">
+      <h2 className="text-2xl font-bold mb-6 text-blue-600">Assignments</h2>
+      {assignments.map((assignment) => (
+        <div
+          key={assignment._id}
+          className="bg-white shadow-md rounded-lg p-4 mb-4 border border-gray-300"
+        >
           <h3 className="text-xl font-semibold text-gray-800">{assignment.title}</h3>
-          <p className="text-gray-600">Due Date: {assignment.dueDate}</p>
-          <h4 className="text-lg font-medium mt-2">Submissions:</h4>
-          <ul className="list-none p-0">
-            {assignment.submissions.map(submission => (
-              <li key={submission.studentId} className="flex justify-between items-center py-2">
-                <span className="text-gray-800">{submission.name}</span>
-                <input
-                  type="number"
-                  placeholder="Enter marks"
-                  value={submission.marks || ''}
-                  onChange={e => handleMarksChange(assignment.id, submission.studentId, e.target.value)}
-                  className="border border-gray-300 rounded-md p-1 w-24 focus:outline-none focus:ring-2 focus:ring-blue-400"
-                />
-              </li>
-            ))}
-          </ul>
+          <p className="text-gray-600 mt-1">
+            <strong>Class:</strong> {assignment.classId?.name || 'N/A'}
+          </p>
+          <p className="text-gray-600 mt-1">
+            <strong>Deadline:</strong> {assignment.deadline}
+          </p>
+          {assignment.comments && assignment.comments.length > 0 && (
+            <div className="mt-2">
+              <strong className="text-gray-700">Comments:</strong>
+              <ul className="list-disc list-inside text-gray-700">
+                {assignment.comments.map((comment, idx) => (
+                  <li key={idx}>{comment}</li>
+                ))}
+              </ul>
+            </div>
+          )}
+          {assignment.pdfUrl && (
+            <a
+              href={assignment.pdfUrl}
+              target="_blank"
+              rel="noreferrer"
+              className="text-blue-500 underline mt-2 block"
+            >
+              View PDF
+            </a>
+          )}
         </div>
       ))}
     </div>
