@@ -1,26 +1,48 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
-import classesData from '../data/classes';
+import axios from 'axios';
 
 function ClassDetails() {
   const { id } = useParams();
-  const classDetails = classesData.find(cls => cls.id === parseInt(id));
+  const [classDetails, setClassDetails] = useState(null);
+  const [loading, setLoading] = useState(true);
 
   const [assignments, setAssignments] = useState([]);
   const [studyMaterials, setStudyMaterials] = useState([]);
   const [announcements, setAnnouncements] = useState([]);
-  const [newAssignment, setNewAssignment] = useState('');
-  const [newMaterial, setNewMaterial] = useState('');
-  const [newAnnouncement, setNewAnnouncement] = useState('');
-  const [newDeadline, setNewDeadline] = useState('');
-  const [newComment, setNewComment] = useState('');
+
+  const [formData, setFormData] = useState({
+    newAssignment: '',
+    newDeadline: '',
+    newMaterial: '',
+    newAnnouncement: '',
+    newComment: '',
+  });
+
   const [selectedAssignmentId, setSelectedAssignmentId] = useState(null);
 
-  if (!classDetails) {
-    return <div className="text-center mt-10 text-red-500">Class not found</div>;
-  }
+  useEffect(() => {
+    const fetchClassDetails = async () => {
+      try {
+        const res = await axios.get(`http://localhost:5000/api/classes/${id}`);
+        setClassDetails(res.data);
+      } catch (err) {
+        console.error(err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchClassDetails();
+  }, [id]);
+
+  const handleChange = (e) => {
+    setFormData({ ...formData, [e.target.name]: e.target.value });
+  };
+
+  const inputClass = "border px-3 py-2 rounded w-full";
 
   const addAssignment = () => {
+    const { newAssignment, newDeadline } = formData;
     if (newAssignment && newDeadline) {
       const newAssign = {
         id: Date.now(),
@@ -30,42 +52,41 @@ function ClassDetails() {
         comments: []
       };
       setAssignments([...assignments, newAssign]);
-      setNewAssignment('');
-      setNewDeadline('');
+      setFormData({ ...formData, newAssignment: '', newDeadline: '' });
     }
   };
 
   const addStudyMaterial = () => {
-    if (newMaterial) {
-      setStudyMaterials([...studyMaterials, newMaterial]);
-      setNewMaterial('');
+    if (formData.newMaterial) {
+      setStudyMaterials([...studyMaterials, formData.newMaterial]);
+      setFormData({ ...formData, newMaterial: '' });
     }
   };
 
   const addAnnouncement = () => {
-    if (newAnnouncement) {
-      const newAnnounce = {
-        id: Date.now(),
-        text: newAnnouncement,
-        date: new Date().toLocaleString()
-      };
-      setAnnouncements([...announcements, newAnnounce]);
-      setNewAnnouncement('');
+    if (formData.newAnnouncement) {
+      setAnnouncements([
+        ...announcements,
+        {
+          id: Date.now(),
+          text: formData.newAnnouncement,
+          date: new Date().toLocaleString()
+        }
+      ]);
+      setFormData({ ...formData, newAnnouncement: '' });
     }
   };
 
   const handlePDFUpload = (e, assignmentId) => {
     const file = e.target.files[0];
-    if (file && file.type === 'application/pdf') {
+    if (file?.type === 'application/pdf') {
       const reader = new FileReader();
       reader.onloadend = () => {
-        const updatedAssignments = assignments.map(assign => {
-          if (assign.id === assignmentId) {
-            return { ...assign, pdf: reader.result };
-          }
-          return assign;
-        });
-        setAssignments(updatedAssignments);
+        setAssignments(prev =>
+          prev.map(assign =>
+            assign.id === assignmentId ? { ...assign, pdf: reader.result } : assign
+          )
+        );
       };
       reader.readAsDataURL(file);
     } else {
@@ -74,173 +95,151 @@ function ClassDetails() {
   };
 
   const addComment = (assignmentId) => {
+    const { newComment } = formData;
     if (newComment.trim() !== '') {
-      const updatedAssignments = assignments.map(assign => {
-        if (assign.id === assignmentId) {
-          return { ...assign, comments: [...assign.comments, newComment] };
-        }
-        return assign;
-      });
-      setAssignments(updatedAssignments);
-      setNewComment('');
+      setAssignments(prev =>
+        prev.map(assign =>
+          assign.id === assignmentId
+            ? { ...assign, comments: [...assign.comments, newComment] }
+            : assign
+        )
+      );
+      setFormData({ ...formData, newComment: '' });
       setSelectedAssignmentId(null);
     }
   };
 
+  if (loading) return <div className="text-center mt-10 text-gray-500">Loading...</div>;
+  if (!classDetails) return <div className="text-center mt-10 text-red-500">Class not found</div>;
+
   return (
-    <div className="class-details max-w-5xl mx-auto p-6 space-y-8 bg-white rounded-lg shadow-md">
+    <div className="max-w-5xl mx-auto p-6 space-y-10 bg-white rounded-lg shadow">
       <h2 className="text-4xl font-bold text-center text-indigo-600">{classDetails.name}</h2>
 
-      {/* Announcements Section */}
-      <div className="announcements-section bg-gray-50 p-6 rounded-lg shadow-sm">
-        <h3 className="text-2xl font-semibold mb-4 text-indigo-500">Announcements</h3>
-        <div className="flex space-x-4 mb-6">
+      {/* Assignments */}
+      <section className="space-y-4">
+        <h3 className="text-2xl font-semibold text-gray-700">Assignments</h3>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
           <input
-            type="text"
-            className="border border-gray-300 rounded-lg px-4 py-2 w-full"
-            placeholder="New Announcement"
-            value={newAnnouncement}
-            onChange={(e) => setNewAnnouncement(e.target.value)}
-          />
-          <button 
-            className="bg-green-500 text-white px-6 py-2 rounded-lg shadow-md hover:bg-green-600 transition"
-            onClick={addAnnouncement}
-          >
-            Post
-          </button>
-        </div>
-
-        <ul className="space-y-4">
-          {announcements.map((announce) => (
-            <li key={announce.id} className="bg-white p-4 rounded-lg shadow hover:shadow-lg transition">
-              <p className="text-lg font-semibold text-gray-800">{announce.text}</p>
-              <p className="text-gray-600 text-sm">Posted on: {announce.date}</p>
-            </li>
-          ))}
-        </ul>
-      </div>
-
-      {/* Assignments Section */}
-      <div className="assignments-section bg-gray-50 p-6 rounded-lg shadow-sm">
-        <h3 className="text-2xl font-semibold mb-4 text-indigo-500">Assignments</h3>
-        <div className="flex flex-col md:flex-row md:items-end space-y-4 md:space-y-0 md:space-x-4 mb-6">
-          <input
-            type="text"
-            className="border border-gray-300 rounded-lg px-4 py-2 w-full"
-            placeholder="New Assignment Title"
-            value={newAssignment}
-            onChange={(e) => setNewAssignment(e.target.value)}
+            name="newAssignment"
+            value={formData.newAssignment}
+            onChange={handleChange}
+            placeholder="Assignment Title"
+            className={inputClass}
           />
           <input
+            name="newDeadline"
             type="date"
-            className="border border-gray-300 rounded-lg px-4 py-2 w-full md:w-auto"
-            value={newDeadline}
-            onChange={(e) => setNewDeadline(e.target.value)}
+            value={formData.newDeadline}
+            onChange={handleChange}
+            className={inputClass}
           />
-          <button 
-            className="bg-indigo-500 text-white px-6 py-2 rounded-lg shadow-md hover:bg-indigo-600 transition"
-            onClick={addAssignment}
-          >
-            Assign
-          </button>
         </div>
+        <button onClick={addAssignment} className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">
+          Add Assignment
+        </button>
 
         <ul className="space-y-4">
-          {assignments.map((assign) => (
-            <li key={assign.id} className="bg-white p-4 rounded-lg shadow hover:shadow-lg transition">
+          {assignments.map(assign => (
+            <li key={assign.id} className="border p-4 rounded shadow-sm">
               <div className="flex justify-between items-center">
-                <div>
-                  <h4 className="text-xl font-semibold text-gray-800">{assign.title}</h4>
-                  <p className="text-gray-600">Deadline: {assign.deadline}</p>
-                </div>
-                <div>
-                  <input 
-                    type="file" 
-                    accept="application/pdf"
-                    onChange={(e) => handlePDFUpload(e, assign.id)}
-                    className="hidden" 
-                    id={`upload-pdf-${assign.id}`}
-                  />
-                  <label htmlFor={`upload-pdf-${assign.id}`} className="bg-blue-500 text-white px-3 py-1 rounded-lg cursor-pointer hover:bg-blue-600 transition">
-                    Upload PDF
-                  </label>
-                  {assign.pdf && (
-                    <a 
-                      href={assign.pdf} 
-                      target="_blank" 
-                      rel="noopener noreferrer" 
-                      className="ml-2 text-blue-500 hover:underline"
-                    >
-                      View PDF
-                    </a>
-                  )}
-                </div>
+                <h4 className="font-medium">{assign.title}</h4>
+                <span className="text-sm text-gray-500">Deadline: {assign.deadline}</span>
               </div>
 
-              <div className="mt-4">
-                <h5 className="text-lg font-semibold text-indigo-400">Comments</h5>
-                <ul className="list-disc ml-5 mb-2">
-                  {assign.comments.map((comment, idx) => (
-                    <li key={idx} className="text-gray-700">{comment}</li>
-                  ))}
-                </ul>
-                {selectedAssignmentId === assign.id ? (
-                  <div className="flex space-x-2">
+              <div className="mt-2">
+                <input type="file" accept="application/pdf" onChange={(e) => handlePDFUpload(e, assign.id)} />
+                {assign.pdf && (
+                  <a href={assign.pdf} target="_blank" rel="noopener noreferrer" className="ml-2 text-blue-600 underline">
+                    View PDF
+                  </a>
+                )}
+              </div>
+
+              <div className="mt-2 space-y-2">
+                <button onClick={() => setSelectedAssignmentId(assign.id)} className="text-sm text-indigo-600 hover:underline">
+                  Add Comment
+                </button>
+
+                {selectedAssignmentId === assign.id && (
+                  <div className="flex flex-col gap-2 mt-2">
                     <input
-                      type="text"
-                      className="border border-gray-300 rounded-lg px-4 py-2 w-full"
-                      placeholder="Add a comment"
-                      value={newComment}
-                      onChange={(e) => setNewComment(e.target.value)}
+                      name="newComment"
+                      value={formData.newComment}
+                      onChange={handleChange}
+                      placeholder="Enter comment"
+                      className={inputClass}
                     />
-                    <button 
-                      className="bg-green-500 text-white px-4 py-2 rounded-lg shadow-md hover:bg-green-600 transition"
+                    <button
                       onClick={() => addComment(assign.id)}
+                      className="bg-green-500 text-white px-3 py-1 rounded"
                     >
-                      Submit
+                      Submit Comment
                     </button>
                   </div>
-                ) : (
-                  <button 
-                    className="text-blue-500 hover:underline mt-2"
-                    onClick={() => setSelectedAssignmentId(assign.id)}
-                  >
-                    Add Comment
-                  </button>
+                )}
+
+                {assign.comments.length > 0 && (
+                  <ul className="list-disc list-inside text-sm text-gray-600 space-y-1">
+                    {assign.comments.map((c, idx) => <li key={idx}>{c}</li>)}
+                  </ul>
                 )}
               </div>
             </li>
           ))}
         </ul>
-      </div>
+      </section>
 
-      {/* Study Material Section */}
-      <div className="study-material-section bg-gray-50 p-6 rounded-lg shadow-sm">
-        <h3 className="text-2xl font-semibold mb-4 text-indigo-500">Study Materials</h3>
-        <div className="flex flex-col md:flex-row md:items-end space-y-4 md:space-y-0 md:space-x-4 mb-6">
+      {/* Study Materials */}
+      <section className="space-y-4">
+        <h3 className="text-2xl font-semibold text-gray-700">Study Material</h3>
+        <div className="flex flex-col md:flex-row gap-2">
           <input
-            type="text"
-            className="border border-gray-300 rounded-lg px-4 py-2 w-full"
-            placeholder="YouTube Link or Resource"
-            value={newMaterial}
-            onChange={(e) => setNewMaterial(e.target.value)}
+            name="newMaterial"
+            value={formData.newMaterial}
+            onChange={handleChange}
+            placeholder="Enter YouTube link or material"
+            className={inputClass}
           />
-          <button 
-            className="bg-green-500 text-white px-6 py-2 rounded-lg shadow-md hover:bg-green-600 transition"
-            onClick={addStudyMaterial}
-          >
-            Post
+          <button onClick={addStudyMaterial} className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">
+            Add Material
           </button>
         </div>
-
-        <ul className="space-y-4">
+        <ul className="list-disc list-inside text-gray-700">
           {studyMaterials.map((material, index) => (
-            <li key={index} className="bg-white p-4 rounded-lg shadow hover:shadow-lg transition">
-              <a href={material} target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:underline">{material}</a>
+            <li key={index}>
+              <a href={material} target="_blank" rel="noopener noreferrer" className="text-indigo-600 underline">
+                {material}
+              </a>
             </li>
           ))}
         </ul>
-      </div>
+      </section>
+
+      {/* Announcements */}
+      <section className="space-y-4">
+        <h3 className="text-2xl font-semibold text-gray-700">Announcements</h3>
+        <div className="flex flex-col md:flex-row gap-2">
+          <input
+            name="newAnnouncement"
+            value={formData.newAnnouncement}
+            onChange={handleChange}
+            placeholder="Write announcement"
+            className={inputClass}
+          />
+          <button onClick={addAnnouncement} className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">
+            Post Announcement
+          </button>
+        </div>
+        <ul className="list-disc list-inside text-gray-700">
+          {announcements.map((announcement, index) => (
+            <li key={index}>
+              <span className="font-medium">{announcement.text}</span>{' '}
+              <span className="text-sm text-gray-500">({announcement.date})</span>
+            </li>
+          ))}
+        </ul>
+      </section>
     </div>
   );
 }

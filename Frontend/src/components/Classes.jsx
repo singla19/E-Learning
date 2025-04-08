@@ -1,24 +1,35 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import classesData from '../data/classes';
+import axios from 'axios';
 
 function Classes() {
   const [newClassName, setNewClassName] = useState('');
   const [newClassStudents, setNewClassStudents] = useState('');
-  const [classes, setClasses] = useState(classesData);
+  const [classes, setClasses] = useState([]);
   const [showForm, setShowForm] = useState(false);
 
-  const handleAddClass = () => {
+  // Fetch classes from backend
+  useEffect(() => {
+    axios.get('http://localhost:5000/api/classes')
+      .then((res) => setClasses(res.data))
+      .catch((err) => console.error('Error fetching classes:', err));
+  }, []);
+
+  const handleAddClass = async () => {
     if (newClassName && newClassStudents) {
-      const newClass = {
-        id: classes.length + 1,
-        name: newClassName,
-        students: newClassStudents,
-      };
-      setClasses([...classes, newClass]);
-      setNewClassName('');
-      setNewClassStudents('');
-      setShowForm(false);
+      try {
+        const res = await axios.post('http://localhost:5000/api/classes', {
+          name: newClassName,
+          students: Number(newClassStudents),
+        });
+
+        setClasses([...classes, res.data]); // Add new class to state
+        setNewClassName('');
+        setNewClassStudents('');
+        setShowForm(false);
+      } catch (err) {
+        console.error('Error adding class:', err);
+      }
     }
   };
 
@@ -71,8 +82,8 @@ function Classes() {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 m-3">
         {classes.map((cls) => (
           <Link
-            to={`/teacher/classes/${cls.id}`}
-            key={cls.id}
+            to={`/teacher/classes/${cls._id}`}
+            key={cls._id}
             className="bg-white rounded-md shadow-md p-4 hover:shadow-lg transition duration-300 ease-in-out transform hover:scale-105"
           >
             <div className="flex items-center">
