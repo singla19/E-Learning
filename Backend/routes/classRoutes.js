@@ -3,8 +3,6 @@ const router = express.Router();
 const Class = require('../models/Class');
 const path = require('path');
 
-/* ---------------------- ROUTES ---------------------- */
-
 // Get all classes
 router.get('/', async (req, res) => {
   try {

@@ -5,7 +5,7 @@ const Assignment = require('../models/Assignment');
 
 const router = express.Router();
 
-// Multer config for PDF upload
+// Multer for PDF upload
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
     cb(null, 'uploads/');
@@ -17,7 +17,7 @@ const storage = multer.diskStorage({
 });
 const upload = multer({ storage });
 
-// ✅ GET all assignments (optionally filter by classId)
+// GET all assignments
 router.get('/', async (req, res) => {
   try {
     const { classId } = req.query;
@@ -29,7 +29,7 @@ router.get('/', async (req, res) => {
   }
 });
 
-// ✅ POST new assignment (with optional PDF)
+// POST new assignment
 router.post('/', upload.single('pdf'), async (req, res) => {
   try {
     const { classId, title, deadline } = req.body;
@@ -50,7 +50,7 @@ router.post('/', upload.single('pdf'), async (req, res) => {
   }
 });
 
-// ✅ POST a comment on a specific assignment
+// POST a comment on a specific assignment
 router.post('/:id/comment', async (req, res) => {
   try {
     const { comment } = req.body;
